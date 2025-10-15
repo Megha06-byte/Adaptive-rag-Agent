@@ -1,6 +1,4 @@
 # Adaptive-rag-Agent
-an intelligent adaptive rag agent which can handle queries in an optimal way
-
 # Overview
 An intelligent adaptive rag agent which can handle queries in an optimal way. It implements multiple retrieval paths (sparse, dense, hybrid, web) using threading to find the best method for current query, and using hallucination check loop for credible answer to query.
 
@@ -63,3 +61,16 @@ Generated output :
                   |   Final Answer    |
                   +-------------------+
 
+# Tech stack
+
+```Component              |  Technology/Tool                          |  Model/Library Used         |  Purpose/Description              
+-----------------------+-------------------------------------------+-----------------------------+-----------------------------------
+Programming Language   |  Python                                   |  —                          |  Scripting, orchestration         
+Orchestration/Agents   |  LangChain, LangGraph (optional)          |  —                          |  Workflow control, agentic logic  
+Retrieval              |  FAISS (Dense), BM25 (Sparse), Threading  |  numpy, rank_bm25           |  Hybrid and parallel retrieval    
+Memory Management      |  Custom Heap, Priority Buffer             |  heapq, itertools           |  Selects/stores top-k memories    
+LLM Interface          |  OpenRouter Python SDK                    |  qwen/qwen3-vl-8b-thinking  |  Runs LLM for answering, scoring  
+Embedding Interface    |  Hugging Face                             |  all-MiniLM-L6-v2           |  Sentence embeddings for retrieval
+Hallucination Scoring  |  Custom LLM prompt (OpenRouter)           |  qwen/qwen3-vl-8b-thinking  |  Checks/corrects LLM generations  
+Chunking/Splitting     |  LangChain TextSplitter                   |  langchain.text_splitter    |  Context preprocessing
+```    
