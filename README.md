@@ -25,12 +25,6 @@ Generated output :
 │   └── retrieval.py         # Threaded retrieval (dense, sparse, web)
 ├── hallucination/
 │   └── hallucination.py     # Hallucination scoring and correction
-├── data/
-│   └── local_data.jsonl     # Local data/cache
-├── tests/
-│   ├── test_memory.py       # Unit tests for memory
-│   ├── test_retrieval.py    # Unit tests for retrieval
-│   └── test_hallucination.py# Unit tests for hallucination
 ├── requirements.txt         # Project dependencies
 └── README.md                # Project overview and instructions
 ```
