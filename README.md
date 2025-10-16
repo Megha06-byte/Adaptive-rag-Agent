@@ -16,7 +16,8 @@ Generated output :
 <img width="1704" height="488" alt="image" src="https://github.com/user-attachments/assets/dbeaeb56-3fad-42b9-a1f6-460cd8537c6e" />
 
 # Project structure
-```├── main.py                  # CLI entrypoint and pipeline orchestrator
+```
+├── main.py                  # CLI entrypoint and pipeline orchestrator
 ├── memory/
 │   └── memory.py            # Priority memory management (heap-based)
 ├── retrieval/
