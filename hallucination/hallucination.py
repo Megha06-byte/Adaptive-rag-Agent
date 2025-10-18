@@ -18,8 +18,36 @@ model_name = "qwen/qwen3-vl-8b-thinking"
 max_attempts = 5
 hallucination_threshold = 0.2
 
+def generate_answer_agent(state: AgentState):
+    client = state.get("client")
+    model_name = state.get("model_name")
+    query = state.get("query")
+    retrieved_chunk = state.get("retrieved_chunk")
+    attempt = state.get("attempt", 0)
+
+    # Compose the prompt for the LLM
+    prompt = f"""
+    You are a helpful assistant. Use the following context to answer the user's question.
+    Context: {retrieved_chunk}
+    Question: {query}
+    Answer as accurately and concisely as possible.
+    """
+
+    # Call the LLM to generate an answer
+    response = client.chat.completions.create(
+        model=model_name,
+        messages=[{"role": "user", "content": [{"type": "text", "text": prompt}]}]
+    )
+    try:
+        new_answer = response.choices[0].message.content.strip()
+    except Exception:
+        new_answer = f"Failed to generate answer at attempt {attempt}"
+
+    state["answer"] = new_answer
+    return Command(goto="hallucination_check_agent", update=state)
+
 # Node: Generate hallucination score
-def hallucination_check(state: AgentState):
+def hallucination_check_agent(state: AgentState):
     hallucination_prompt = f"""
     You are an expert assistant helping to check if statements are based on the context.
     Context: {state['retrieved_chunk']}
@@ -36,41 +64,36 @@ def hallucination_check(state: AgentState):
         score = float(response.choices[0].message.content.strip())
     except Exception:
         score = 1.0
-    return {"hallucination_score": score, "attempt": state["attempt"] + 1}
+    state["hallucination_score"] = score
+    state["attempt"] += 1
+    return Command(goto="coordinator_agent", update=state)
 
 # Node: Check if should retry or end
-def decide_next(state: AgentState):
+def coordinator_agent(state: AgentState):
     if state["hallucination_score"] > hallucination_threshold and state["attempt"] < max_attempts:
-        return "Regenerate"
+        return Command(goto="generate_answer_agent", update=state)
     else:
-        return END
-    
-# Node: Regenerate answer (stub here, implement your own generation)
-def regenerate(state: AgentState):
-    # Example regeneration logic (replace with your LLM generation call)
-    new_answer = f"Regenerated answer at attempt {state['attempt']}"
-    return {"answer": new_answer}
-    
-# Build LangGraph
+        return Command(goto=END, update=state)
+        
 graph = StateGraph(AgentState)
+graph.add_node("generate_answer_agent", generate_answer_agent)
+graph.add_node("hallucination_check_agent", hallucination_check_agent)
+graph.add_node("coordinator_agent", coordinator_agent)
 
-graph.add_node("HallucinationCheck", hallucination_check)
-graph.add_node("DecideNext", decide_next)
-graph.add_node("Regenerate", regenerate)
+graph.set_entry_point("generate_answer_agent")
 
-graph.add_edge("HallucinationCheck", "DecideNext", condition=True)
-graph.add_conditional_edges("DecideNext", lambda state: state, {"Regenerate": "Regenerate", END: END})
-graph.add_edge("Regenerate", "HallucinationCheck")
-graph.set_entry_point("HallucinationCheck")
-
-#initial state example
+# Initial state example
 initial_state = {
     "context": "Some context",
-    "answer": "Initial LLM answer",
+    "answer": "",
     "retrieved_chunk": "Context chunk",
     "hallucination_score": 1.0,
     "attempt": 0,
+    "query": "Why is the Amazon rainforest considered important for the global climate, and what are the main threats it faces?",
+    "client": client,  # OpenAI client object
+    "model_name": "qwen/qwen3-vl-8b-thinking"
 }
+
 
 compiled_graph = graph.compile()
 result = compiled_graph.invoke(initial_state)
