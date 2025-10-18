@@ -1,9 +1,9 @@
 from memory import PriorityMemory
 from retrieval import threaded_retrieval
 from hallucination import (
-    hallucination_check,
-    decide_next,
-    regenerate,
+    generate_answer_agent,
+    hallucination_check_agent,
+    coordinator_agent,
     graph as hallucination_graph,
     AgentState,
     END,
@@ -28,13 +28,16 @@ faiss_index = faiss.IndexFlatL2(embedding_dim)
 faiss_index.add(np.array(embeddings))
 
 # Initialize agent state and memory buffer
-agent_state = AgentState({
+agent_state = {
     "context": "",  # Optional
     "answer": "",
-    "retrieved_chunk": None,
+    "retrieved_chunk": retrieved_chunk,  # Set after retrieval
     "hallucination_score": 1.0,
     "attempt": 0,
-})
+    "query": query,
+    "client": client,
+    "model_name": "qwen/qwen3-vl-8b-thinking"
+}
 
 query = "Why is the Amazon rainforest considered important for the global climate, and what are the main threats it faces?"
 agent_state["query"] = query  # Add query 
