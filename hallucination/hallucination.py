@@ -1,7 +1,7 @@
 #hallucination.py
 # a corrective loop to check the reliability of generated response, using graphs nodes instead of iterative while loop
 
-from langgraph import StateGraph
+from langgraph import StateGraph, Command
 from langgraph.types import END, TypedDict
 from openai import OpenAI
 
